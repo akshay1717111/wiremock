@@ -1,0 +1,75 @@
+FROM wiremock/wiremock
+
+
+COPY ./wiremock-config /home/wiremock
+
+# RUN apt-get update && \
+#     apt-get install dos2unix && \
+#     apt-get clean
+
+# This will add crontab library
+# RUN apt-get update && apt-get -y install cron
+
+RUN apt-get update && \
+    apt-get install -y dos2unix cron supervisor && \
+    apt-get clean
+
+
+# Expose the WireMock port
+EXPOSE 8080 8443 13133
+
+COPY newshell.sh /home/wiremock/newshell.sh
+
+COPY cronfile.txt /home/wiremock/cronfile.txt
+
+
+RUN dos2unix /home/wiremock/newshell.sh /home/wiremock/newshell.sh
+
+RUN dos2unix /home/wiremock/cronfile.txt /home/wiremock/cronfile.txt
+
+RUN chmod 755 /home/wiremock/newshell.sh
+RUN chmod 755 /home/wiremock/cronfile.txt
+
+
+RUN chmod +x /home/wiremock/newshell.sh
+
+# Apply cron job
+RUN crontab /home/wiremock/cronfile.txt
+
+# Configure Supervisor
+
+
+CMD cron && /home/wiremock/newshell.sh >> /var/log/newshell.log 2>&1 && java -jar /var/wiremock/lib/wiremock-standalone.jar --port 8080 --https-port 8443
+
+
+# Start for first time
+# RUN /home/wiremock/newshell.sh >> /var/log/newshell.log 2>&1
+
+
+# Start Supervisor
+# CMD ["/usr/bin/supervisord", "-n"]
+
+
+# RUN service cron restart
+
+# RUN crontab -r
+
+# RUN crontab /etc/cronfile.txt && \
+#     touch /var/log/cronfile.log && \
+#     chmod 777 /var/log/cronfile.log 2>&1
+
+
+
+
+
+
+
+
+
+
+
+
+# Apply cron job
+# RUN crontab /home/wiremock/cronfile.txt
+# RUN service cron restart
+# CMD ["cron", "-f"]
